@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>6505 台塑化 - 台塑化 (6505) Technical Chart</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; color: #e6edf3; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans CJK TC', sans-serif; }
+  .header {
+    padding: 16px 24px 12px;
+    border-bottom: 1px solid #21262d;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  .header h1 { font-size: 18px; font-weight: 700; color: #58a6ff; }
+  .badge { background: #1f6feb; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+  .price-info { display: flex; gap: 16px; font-size: 14px; margin-left: auto; flex-wrap: wrap; }
+  .price { font-size: 22px; font-weight: 700; color: #e6edf3; }
+  .chg { font-size: 14px; font-weight: 600; }
+  .chg.up { color: #ef4444; } .chg.dn { color: #22c55e; }
+  .selector {
+    padding: 12px 24px; background: #161b22; border-bottom: 1px solid #21262d;
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  }
+  .selector label { font-size: 13px; color: #8b949e; }
+  .selector select, .selector button {
+    background: #21262d; color: #e6edf3; border: 1px solid #30363d;
+    border-radius: 6px; padding: 5px 12px; font-size: 13px; cursor: pointer;
+  }
+  .selector button {
+    background: #238636; border-color: #238636; font-weight: 600;
+  }
+  .selector button:hover { background: #2ea043; }
+  .chart-wrap { padding: 8px 4px 0; }
+  .legend-bar {
+    padding: 6px 24px; background: #161b22; border-top: 1px solid #21262d;
+    font-size: 11px; color: #8b949e; display: flex; gap: 16px; flex-wrap: wrap;
+  }
+  .legend-item { display: flex; align-items: center; gap: 4px; }
+  .dot { width: 10px; height: 3px; border-radius: 2px; display: inline-block; }
+  .footer { padding: 12px 24px; font-size: 11px; color: #484f58; text-align: center; }
+  @media (max-width: 600px) {
+    .header { flex-direction: column; align-items: flex-start; }
+    .price-info { margin-left: 0; }
+    .selector { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>6505 台塑化</h1>
+  <span class="badge">日線 Technical</span>
+  <div class="price-info">
+    <div>
+      <div class="price">54.40</div>
+      <div class="chg dn">0.80 (1.45%)</div>
+    </div>
+    <div style="font-size:12px; color:#8b949e; line-height:1.6">
+      2026-04-17<br>RSI: 50 &nbsp; K:50 D:50<br>MACD: 空方
+    </div>
+  </div>
+</div>
+
+<div class="selector">
+  <label>股票：</label>
+  <select id="stockSel" onchange="switchStock()"><option value="1301">1301 台塑</option><option value="1326">1326 台化</option><option value="1303">1303 南亞</option><option value="6505">6505 台塑化</option><option value="2002">2002 中鋼</option></select>
+  <label style="margin-left:8px">天數：</label>
+  <select id="daysSel" onchange="switchStock()">
+    <option value="20">20天</option>
+    <option value="60" selected>60天</option>
+    <option value="120">120天</option>
+  </select>
+  <button onclick="toggleIndicators()">切換指標</button>
+</div>
+
+<div class="chart-wrap">
+  <div id="klineChart" style="width:100%;height:480px;"></div>
+  <div id="volChart"   style="width:100%;height:140px;"></div>
+  <div id="rsiChart"   style="width:100%;height:160px;"></div>
+  <div id="macdChart"  style="width:100%;height:160px;"></div>
+</div>
+
+<div class="legend-bar">
+  <span class="legend-item"><span class="dot" style="background:#ef4444"></span>K Line</span>
+  <span class="legend-item"><span class="dot" style="background:#FFA726"></span>MA5</span>
+  <span class="legend-item"><span class="dot" style="background:#AB47BC"></span>MA10</span>
+  <span class="legend-item"><span class="dot" style="background:#42A5F5"></span>MA20</span>
+  <span class="legend-item"><span class="dot" style="background:#B2DFDB"></span>MA60</span>
+  <span class="legend-item"><span class="dot" style="background:#E040FB"></span>RSI</span>
+  <span class="legend-item"><span class="dot" style="background:#29B6F6"></span>MACD</span>
+</div>
+
+<div class="footer">
+  僅供個人參考，不構成投資建議 &nbsp;|&nbsp; 資料來源：Yahoo Finance / TWSE &nbsp;|&nbsp; 製圖：Hermes Agent
+</div>
+
+<script>
+const allData = {"1301": {"20": {"dates": ["2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17"], "open": [47.5, 51.20000076293945, 54.29999923706055, 53.0, 54.79999923706055], "high": [51.59999847412109, 55.5, 54.400001525878906, 54.400001525878906, 56.29999923706055], "low": [47.150001525878906, 50.59999847412109, 51.900001525878906, 51.70000076293945, 52.79999923706055], "close": [51.400001525878906, 54.20000076293945, 52.09999847412109, 54.29999923706055, 52.900001525878906], "volume": [84531.0, 101438.0, 38629.0, 35332.0, 24045.0], "ma5": [null, null, null, null, 52.98000030517578], "ma10": [null, null, null, null, null], "ma20": [null, null, null, null, null], "ma60": [null, null, null, null, null], "bb_u": [null, null, null, null, null], "bb_l": [null, null, null, null, null], "bb_m": [null, null, null, null, null], "rsi": [50.0, 50.0, 50.0, 50.0, 50.0], "k": [null, null, null, null, 50.0], "d": [null, null, null, null, 50.0], "macd_line": [0.0, 0.22336176250055217, 0.2282933110781542, 0.4050540631489028, 0.4272451020485448], "signal_line": [0.0, 0.04467235250011044, 0.0813965442157192, 0.1461280480023559, 0.20235145881159372], "hist": [0.0, 0.17868941000044175, 0.14689676686243502, 0.2589260151465469, 0.2248936432369511], "_last": {"close": 52.900001525878906, "chg": -1.3999977111816406, "pct": -2.578264697702098, "date": "2026-04-17", "rsi": 50.0, "k": 50.0, "d": 50.0, "macd": 0.4272451020485448, "hist": 0.2248936432369511}}, "60": {"dates": ["2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17"], "open": [47.5, 51.20000076293945, 54.29999923706055, 53.0, 54.79999923706055], "high": [51.59999847412109, 55.5, 54.400001525878906, 54.400001525878906, 56.29999923706055], "low": [47.150001525878906, 50.59999847412109, 51.900001525878906, 51.70000076293945, 52.79999923706055], "close": [51.400001525878906, 54.20000076293945, 52.09999847412109, 54.29999923706055, 52.900001525878906], "volume": [84531.0, 101438.0, 38629.0, 35332.0, 24045.0], "ma5": [null, null, null, null, 52.98000030517578], "ma10": [null, null, null, null, null], "ma20": [null, null, null, null, null], "ma60": [null, null, null, null, null], "bb_u": [null, null, null, null, null], "bb_l": [null, null, null, null, null], "bb_m": [null, null, null, null, null], "rsi": [50.0, 50.0, 50.0, 50.0, 50.0], "k": [null, null, null, null, 50.0], "d": [null, null, null, null, 50.0], "macd_line": [0.0, 0.22336176250055217, 0.2282933110781542, 0.4050540631489028, 0.4272451020485448], "signal_line": [0.0, 0.04467235250011044, 0.0813965442157192, 0.1461280480023559, 0.20235145881159372], "hist": [0.0, 0.17868941000044175, 0.14689676686243502, 0.2589260151465469, 0.2248936432369511], "_last": {"close": 52.900001525878906, "chg": -1.3999977111816406, "pct": -2.578264697702098, "date": "2026-04-17", "rsi": 50.0, "k": 50.0, "d": 50.0, "macd": 0.4272451020485448, "hist": 0.2248936432369511}}, "120": {"dates": ["2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17"], "open": [47.5, 51.20000076293945, 54.29999923706055, 53.0, 54.79999923706055], "high": [51.59999847412109, 55.5, 54.400001525878906, 54.400001525878906, 56.29999923706055], "low": [47.150001525878906, 50.59999847412109, 51.900001525878906, 51.70000076293945, 52.79999923706055], "close": [51.400001525878906, 54.20000076293945, 52.09999847412109, 54.29999923706055, 52.900001525878906], "volume": [84531.0, 101438.0, 38629.0, 35332.0, 24045.0], "ma5": [null, null, null, null, 52.98000030517578], "ma10": [null, null, null, null, null], "ma20": [null, null, null, null, null], "ma60": [null, null, null, null, null], "bb_u": [null, null, null, null, null], "bb_l": [null, null, null, null, null], "bb_m": [null, null, null, null, null], "rsi": [50.0, 50.0, 50.0, 50.0, 50.0], "k": [null, null, null, null, 50.0], "d": [null, null, null, null, 50.0], "macd_line": [0.0, 0.22336176250055217, 0.2282933110781542, 0.4050540631489028, 0.4272451020485448], "signal_line": [0.0, 0.04467235250011044, 0.0813965442157192, 0.1461280480023559, 0.20235145881159372], "hist": [0.0, 0.17868941000044175, 0.14689676686243502, 0.2589260151465469, 0.2248936432369511], "_last": {"close": 52.900001525878906, "chg": -1.3999977111816406, "pct": -2.578264697702098, "date": "2026-04-17", "rsi": 50.0, "k": 50.0, "d": 50.0, "macd": 0.4272451020485448, "hist": 0.2248936432369511}}}, "1326": {"20": {"dates": ["2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17"], "open": [46.09999847412109, 49.900001525878906, 55.0, 50.59999847412109, 52.09999847412109], "high": [49.95000076293945, 54.900001525878906, 55.0, 52.5, 53.0], "low": [46.0, 49.0, 49.59999847412109, 49.95000076293945, 50.5], "close": [49.95000076293945, 54.59999847412109, 50.29999923706055, 51.79999923706055, 50.79999923706055], "volume": [85357.0, 95862.0, 75149.0, 28073.0, 21365.0], "ma5": [null, null, null, null, 51.48999938964844], "ma10": [null, null, null, null, null], "ma20": [null, null, null, null, null], "ma60": [null, null, null, null, null], "bb_u": [null, null, null, null, null], "bb_l": [null, null, null, null, null], "bb_m": [null, null, null, null, null], "rsi": [50.0, 50.0, 50.0, 50.0, 50.0], "k": [null, null, null, null, 50.0], "d": [null, null, null, null, 50.0], "macd_line": [0.0, 0.3709399883563691, 0.31431536786315917, 0.38602752710222177, 0.3580410133766847], "signal_line": [0.0, 0.07418799767127382, 0.1222134717096509, 0.17497628278816507, 0.211589228905869], "hist": [0.0, 0.2967519906850953, 0.19210189615350826, 0.2110512443140567, 0.1464517844708157], "_last": {"close": 50.79999923706055, "chg": -1.0, "pct": -1.9305019589354462, "date": "2026-04-17", "rsi": 50.0, "k": 50.0, "d": 50.0, "macd": 0.3580410133766847, "hist": 0.1464517844708157}}, "60": {"dates": ["2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17"], "open": [46.09999847412109, 49.900001525878906, 55.0, 50.59999847412109, 52.09999847412109], "high": [49.95000076293945, 54.900001525878906, 55.0, 52.5, 53.0], "low": [46.0, 49.0, 49.59999847412109, 49.95000076293945, 50.5], "close": [49.95000076293945, 54.59999847412109, 50.29999923706055, 51.79999923706055, 50.79999923706055], "volume": [85357.0, 95862.0, 75149.0, 28073.0, 21365.0], "ma5": [null, null, null, null, 51.48999938964844], "ma10": [null, null, null, null, null], "ma20": [null, null, null, null, null], "ma60": [null, null, null, null, null], "bb_u": [null, null, null, null, null], "bb_l": [null, null, null, null, null], "bb_m": [null, null, null, null, null], "rsi": [50.0, 50.0, 50.0, 50.0, 50.0], "k": [null, null, null, null, 50.0], "d": [null, null, null, null, 50.0], "macd_line": [0.0, 0.3709399883563691, 0.31431536786315917, 0.38602752710222177, 0.3580410133766847], "signal_line": [0.0, 0.07418799767127382, 0.1222134717096509, 0.17497628278816507, 0.211589228905869], "hist": [0.0, 0.2967519906850953, 0.19210189615350826, 0.2110512443140567, 0.1464517844708157], "_last": {"close": 50.79999923706055, "chg": -1.0, "pct": -1.9305019589354462, "date": "2026-04-17", "rsi": 50.0, "k": 50.0, "d": 50.0, "macd": 0.3580410133766847, "hist": 0.1464517844708157}}, "120": {"dates": ["2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17"], "open": [46.09999847412109, 49.900001525878906, 55.0, 50.59999847412109, 52.09999847412109], "high": [49.95000076293945, 54.900001525878906, 55.0, 52.5, 53.0], "low": [46.0, 49.0, 49.59999847412109, 49.95000076293945, 50.5], "close": [49.95000076293945, 54.59999847412109, 50.29999923706055, 51.79999923706055, 50.79999923706055], "volume": [85357.0, 95862.0, 75149.0, 28073.0, 21365.0], "ma5": [null, null, null, null, 51.48999938964844], "ma10": [null, null, null, null, null], "ma20": [null, null, null, null, null], "ma60": [null, null, null, null, null], "bb_u": [null, null, null, null, null], "bb_l": [null, null, null, null, null], "bb_m": [null, null, null, null, null], "rsi": [50.0, 50.0, 50.0, 50.0, 50.0], "k": [null, null, null, null, 50.0], "d": [null, null, null, null, 50.0], "macd_line": [0.0, 0.3709399883563691, 0.31431536786315917, 0.38602752710222177, 0.3580410133766847], "signal_line": [0.0, 0.07418799767127382, 0.1222134717096509, 0.17497628278816507, 0.211589228905869], "hist": [0.0, 0.2967519906850953, 0.19210189615350826, 0.2110512443140567, 0.1464517844708157], "_last": {"close": 50.79999923706055, "chg": -1.0, "pct": -1.9305019589354462, "date": "2026-04-17", "rsi": 50.0, "k": 50.0, "d": 50.0, "macd": 0.3580410133766847, "hist": 0.1464517844708157}}}, "1303": {"20": {"dates": ["2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17"], "open": [83.0, 87.5999984741211, 90.8000030517578, 89.80000305175781, 89.30000305175781], "high": [86.9000015258789, 91.5, 91.9000015258789, 91.1999969482422, 91.1999969482422], "low": [81.80000305175781, 86.80000305175781, 86.80000305175781, 86.19999694824219, 86.9000015258789], "close": [86.0999984741211, 89.19999694824219, 88.5, 90.3000030517578, 87.80000305175781], "volume": [87391.0, 123354.0, 118034.0, 81962.0, 87387.0], "ma5": [null, null, null, null, 88.38000030517578], "ma10": [null, null, null, null, null], "ma20": [null, null, null, null, null], "ma60": [null, null, null, null, null], "bb_u": [null, null, null, null, null], "bb_l": [null, null, null, null, null], "bb_m": [null, null, null, null, null], "rsi": [50.0, 50.0, 50.0, 50.0, 50.0], "k": [null, null, null, null, 50.0], "d": [null, null, null, null, 50.0], "macd_line": [0.0, 0.2472933255709222, 0.3823832876191773, 0.6274553442060977, 0.6128826780652901], "signal_line": [0.0, 0.049458665114184445, 0.11604358961518302, 0.21832594053336596, 0.2972372880397508], "hist": [0.0, 0.19783466045673775, 0.26633969800399426, 0.40912940367273176, 0.31564539002553926], "_last": {"close": 87.80000305175781, "chg": -2.499999999999986, "pct": -2.768549186611927, "date": "2026-04-17", "rsi": 50.0, "k": 50.0, "d": 50.0, "macd": 0.6128826780652901, "hist": 0.31564539002553926}}, "60": {"dates": ["2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17"], "open": [83.0, 87.5999984741211, 90.8000030517578, 89.80000305175781, 89.30000305175781], "high": [86.9000015258789, 91.5, 91.9000015258789, 91.1999969482422, 91.1999969482422], "low": [81.80000305175781, 86.80000305175781, 86.80000305175781, 86.19999694824219, 86.9000015258789], "close": [86.0999984741211, 89.19999694824219, 88.5, 90.3000030517578, 87.80000305175781], "volume": [87391.0, 123354.0, 118034.0, 81962.0, 87387.0], "ma5": [null, null, null, null, 88.38000030517578], "ma10": [null, null, null, null, null], "ma20": [null, null, null, null, null], "ma60": [null, null, null, null, null], "bb_u": [null, null, null, null, null], "bb_l": [null, null, null, null, null], "bb_m": [null, null, null, null, null], "rsi": [50.0, 50.0, 50.0, 50.0, 50.0], "k": [null, null, null, null, 50.0], "d": [null, null, null, null, 50.0], "macd_line": [0.0, 0.2472933255709222, 0.3823832876191773, 0.6274553442060977, 0.6128826780652901], "signal_line": [0.0, 0.049458665114184445, 0.11604358961518302, 0.21832594053336596, 0.2972372880397508], "hist": [0.0, 0.19783466045673775, 0.26633969800399426, 0.40912940367273176, 0.31564539002553926], "_last": {"close": 87.80000305175781, "chg": -2.499999999999986, "pct": -2.768549186611927, "date": "2026-04-17", "rsi": 50.0, "k": 50.0, "d": 50.0, "macd": 0.6128826780652901, "hist": 0.31564539002553926}}, "120": {"dates": ["2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17"], "open": [83.0, 87.5999984741211, 90.8000030517578, 89.80000305175781, 89.30000305175781], "high": [86.9000015258789, 91.5, 91.9000015258789, 91.1999969482422, 91.1999969482422], "low": [81.80000305175781, 86.80000305175781, 86.80000305175781, 86.19999694824219, 86.9000015258789], "close": [86.0999984741211, 89.19999694824219, 88.5, 90.3000030517578, 87.80000305175781], "volume": [87391.0, 123354.0, 118034.0, 81962.0, 87387.0], "ma5": [null, null, null, null, 88.38000030517578], "ma10": [null, null, null, null, null], "ma20": [null, null, null, null, null], "ma60": [null, null, null, null, null], "bb_u": [null, null, null, null, null], "bb_l": [null, null, null, null, null], "bb_m": [null, null, null, null, null], "rsi": [50.0, 50.0, 50.0, 50.0, 50.0], "k": [null, null, null, null, 50.0], "d": [null, null, null, null, 50.0], "macd_line": [0.0, 0.2472933255709222, 0.3823832876191773, 0.6274553442060977, 0.6128826780652901], "signal_line": [0.0, 0.049458665114184445, 0.11604358961518302, 0.21832594053336596, 0.2972372880397508], "hist": [0.0, 0.19783466045673775, 0.26633969800399426, 0.40912940367273176, 0.31564539002553926], "_last": {"close": 87.80000305175781, "chg": -2.499999999999986, "pct": -2.768549186611927, "date": "2026-04-17", "rsi": 50.0, "k": 50.0, "d": 50.0, "macd": 0.6128826780652901, "hist": 0.31564539002553926}}}, "6505": {"20": {"dates": ["2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17"], "open": [53.400001525878906, 53.79999923706055, 56.20000076293945, 54.79999923706055, 55.79999923706055], "high": [55.20000076293945, 56.5, 56.20000076293945, 55.79999923706055, 56.5], "low": [52.59999847412109, 53.400001525878906, 53.900001525878906, 54.09999847412109, 54.09999847412109], "close": [55.09999847412109, 56.09999847412109, 54.0, 55.20000076293945, 54.400001525878906], "volume": [19648.0, 20934.0, 11919.0, 8525.0, 7563.0], "ma5": [null, null, null, null, 54.95999984741211], "ma10": [null, null, null, null, null], "ma20": [null, null, null, null, null], "ma60": [null, null, null, null, null], "bb_u": [null, null, null, null, null], "bb_l": [null, null, null, null, null], "bb_m": [null, null, null, null, null], "rsi": [50.0, 50.0, 50.0, 50.0, 50.0], "k": [null, null, null, null, 50.0], "d": [null, null, null, null, 50.0], "macd_line": [0.0, 0.07977207977207712, -0.02615875685800262, -0.013128340001969718, -0.06658731619079816], "signal_line": [0.0, 0.015954415954415425, 0.007531781391931816, 0.0033997571131515096, -0.010597657547638424], "hist": [0.0, 0.0638176638176617, -0.03369053824993443, -0.016528097115121227, -0.05598965864315974], "_last": {"close": 54.400001525878906, "chg": -0.7999992370605469, "pct": -1.449273960151203, "date": "2026-04-17", "rsi": 50.0, "k": 50.0, "d": 50.0, "macd": -0.06658731619079816, "hist": -0.05598965864315974}}, "60": {"dates": ["2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17"], "open": [53.400001525878906, 53.79999923706055, 56.20000076293945, 54.79999923706055, 55.79999923706055], "high": [55.20000076293945, 56.5, 56.20000076293945, 55.79999923706055, 56.5], "low": [52.59999847412109, 53.400001525878906, 53.900001525878906, 54.09999847412109, 54.09999847412109], "close": [55.09999847412109, 56.09999847412109, 54.0, 55.20000076293945, 54.400001525878906], "volume": [19648.0, 20934.0, 11919.0, 8525.0, 7563.0], "ma5": [null, null, null, null, 54.95999984741211], "ma10": [null, null, null, null, null], "ma20": [null, null, null, null, null], "ma60": [null, null, null, null, null], "bb_u": [null, null, null, null, null], "bb_l": [null, null, null, null, null], "bb_m": [null, null, null, null, null], "rsi": [50.0, 50.0, 50.0, 50.0, 50.0], "k": [null, null, null, null, 50.0], "d": [null, null, null, null, 50.0], "macd_line": [0.0, 0.07977207977207712, -0.02615875685800262, -0.013128340001969718, -0.06658731619079816], "signal_line": [0.0, 0.015954415954415425, 0.007531781391931816, 0.0033997571131515096, -0.010597657547638424], "hist": [0.0, 0.0638176638176617, -0.03369053824993443, -0.016528097115121227, -0.05598965864315974], "_last": {"close": 54.400001525878906, "chg": -0.7999992370605469, "pct": -1.449273960151203, "date": "2026-04-17", "rsi": 50.0, "k": 50.0, "d": 50.0, "macd": -0.06658731619079816, "hist": -0.05598965864315974}}, "120": {"dates": ["2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17"], "open": [53.400001525878906, 53.79999923706055, 56.20000076293945, 54.79999923706055, 55.79999923706055], "high": [55.20000076293945, 56.5, 56.20000076293945, 55.79999923706055, 56.5], "low": [52.59999847412109, 53.400001525878906, 53.900001525878906, 54.09999847412109, 54.09999847412109], "close": [55.09999847412109, 56.09999847412109, 54.0, 55.20000076293945, 54.400001525878906], "volume": [19648.0, 20934.0, 11919.0, 8525.0, 7563.0], "ma5": [null, null, null, null, 54.95999984741211], "ma10": [null, null, null, null, null], "ma20": [null, null, null, null, null], "ma60": [null, null, null, null, null], "bb_u": [null, null, null, null, null], "bb_l": [null, null, null, null, null], "bb_m": [null, null, null, null, null], "rsi": [50.0, 50.0, 50.0, 50.0, 50.0], "k": [null, null, null, null, 50.0], "d": [null, null, null, null, 50.0], "macd_line": [0.0, 0.07977207977207712, -0.02615875685800262, -0.013128340001969718, -0.06658731619079816], "signal_line": [0.0, 0.015954415954415425, 0.007531781391931816, 0.0033997571131515096, -0.010597657547638424], "hist": [0.0, 0.0638176638176617, -0.03369053824993443, -0.016528097115121227, -0.05598965864315974], "_last": {"close": 54.400001525878906, "chg": -0.7999992370605469, "pct": -1.449273960151203, "date": "2026-04-17", "rsi": 50.0, "k": 50.0, "d": 50.0, "macd": -0.06658731619079816, "hist": -0.05598965864315974}}}, "2002": {"20": {"dates": ["2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17"], "open": [20.049999237060547, 20.200000762939453, 20.5, 20.25, 20.049999237060547], "high": [20.200000762939453, 20.5, 20.549999237060547, 20.25, 20.149999618530277], "low": [19.850000381469727, 20.100000381469727, 20.049999237060547, 19.850000381469727, 19.950000762939453], "close": [20.100000381469727, 20.5, 20.049999237060547, 19.950000762939453, 20.0], "volume": [23168.0, 42829.0, 35055.0, 36069.0, 18429.0], "ma5": [null, null, null, null, 20.120000076293945], "ma10": [null, null, null, null, null], "ma20": [null, null, null, null, null], "ma60": [null, null, null, null, null], "bb_u": [null, null, null, null, null], "bb_l": [null, null, null, null, null], "bb_m": [null, null, null, null, null], "rsi": [50.0, 50.0, 50.0, 50.0, 50.0], "k": [null, null, null, null, 50.0], "d": [null, null, null, null, 50.0], "macd_line": [0.0, 0.03190880147819897, 0.020647444892123445, 0.0036120599458868696, -0.005787371570647792], "signal_line": [0.0, 0.006381760295639794, 0.009234897214936526, 0.008110329761126595, 0.005330789494771718], "hist": [0.0, 0.025527041182559173, 0.01141254767718692, -0.004498269815239726, -0.011118161065419511], "_last": {"close": 20.0, "chg": 0.049999237060546875, "pct": 0.25062273257367, "date": "2026-04-17", "rsi": 50.0, "k": 50.0, "d": 50.0, "macd": -0.005787371570647792, "hist": -0.011118161065419511}}, "60": {"dates": ["2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17"], "open": [20.049999237060547, 20.200000762939453, 20.5, 20.25, 20.049999237060547], "high": [20.200000762939453, 20.5, 20.549999237060547, 20.25, 20.149999618530277], "low": [19.850000381469727, 20.100000381469727, 20.049999237060547, 19.850000381469727, 19.950000762939453], "close": [20.100000381469727, 20.5, 20.049999237060547, 19.950000762939453, 20.0], "volume": [23168.0, 42829.0, 35055.0, 36069.0, 18429.0], "ma5": [null, null, null, null, 20.120000076293945], "ma10": [null, null, null, null, null], "ma20": [null, null, null, null, null], "ma60": [null, null, null, null, null], "bb_u": [null, null, null, null, null], "bb_l": [null, null, null, null, null], "bb_m": [null, null, null, null, null], "rsi": [50.0, 50.0, 50.0, 50.0, 50.0], "k": [null, null, null, null, 50.0], "d": [null, null, null, null, 50.0], "macd_line": [0.0, 0.03190880147819897, 0.020647444892123445, 0.0036120599458868696, -0.005787371570647792], "signal_line": [0.0, 0.006381760295639794, 0.009234897214936526, 0.008110329761126595, 0.005330789494771718], "hist": [0.0, 0.025527041182559173, 0.01141254767718692, -0.004498269815239726, -0.011118161065419511], "_last": {"close": 20.0, "chg": 0.049999237060546875, "pct": 0.25062273257367, "date": "2026-04-17", "rsi": 50.0, "k": 50.0, "d": 50.0, "macd": -0.005787371570647792, "hist": -0.011118161065419511}}, "120": {"dates": ["2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17"], "open": [20.049999237060547, 20.200000762939453, 20.5, 20.25, 20.049999237060547], "high": [20.200000762939453, 20.5, 20.549999237060547, 20.25, 20.149999618530277], "low": [19.850000381469727, 20.100000381469727, 20.049999237060547, 19.850000381469727, 19.950000762939453], "close": [20.100000381469727, 20.5, 20.049999237060547, 19.950000762939453, 20.0], "volume": [23168.0, 42829.0, 35055.0, 36069.0, 18429.0], "ma5": [null, null, null, null, 20.120000076293945], "ma10": [null, null, null, null, null], "ma20": [null, null, null, null, null], "ma60": [null, null, null, null, null], "bb_u": [null, null, null, null, null], "bb_l": [null, null, null, null, null], "bb_m": [null, null, null, null, null], "rsi": [50.0, 50.0, 50.0, 50.0, 50.0], "k": [null, null, null, null, 50.0], "d": [null, null, null, null, 50.0], "macd_line": [0.0, 0.03190880147819897, 0.020647444892123445, 0.0036120599458868696, -0.005787371570647792], "signal_line": [0.0, 0.006381760295639794, 0.009234897214936526, 0.008110329761126595, 0.005330789494771718], "hist": [0.0, 0.025527041182559173, 0.01141254767718692, -0.004498269815239726, -0.011118161065419511], "_last": {"close": 20.0, "chg": 0.049999237060546875, "pct": 0.25062273257367, "date": "2026-04-17", "rsi": 50.0, "k": 50.0, "d": 50.0, "macd": -0.005787371570647792, "hist": -0.011118161065419511}}}};
+let showRSI = true, showKD = true, showMACD = true;
+
+function switchStock() {
+  const sel = document.getElementById('stockSel').value;
+  const days = parseInt(document.getElementById('daysSel').value);
+  const d = allData[sel][days];
+  if (!d) { alert('無可用資料'); return; }
+  render(d);
+}
+
+function toggleIndicators() {
+  showRSI  = !showRSI;
+  showKD   = !showKD;
+  showMACD = !showMACD;
+  const sel = document.getElementById('stockSel').value;
+  const days = parseInt(document.getElementById('daysSel').value);
+  render(allData[sel][days]);
+}
+
+function render(d) {
+  const rsiVis = showRSI;
+  const kdVis  = showKD;
+  const macdVis= showMACD;
+  document.getElementById('rsiChart').style.display  = (rsiVis  && d.rsi.length > 0) ? 'block' : 'none';
+  document.getElementById('macdChart').style.display = macdVis && d.macd.some(x=>x!==null) ? 'block' : 'none';
+
+  // Layout shared config
+  const layoutShared = {
+    paper_bgcolor:'#0d1117', plot_bgcolor:'#0d1117',
+    font:{ color:'#e6edf3', family:'Noto Sans CJK TC,sans-serif', size:11 },
+    margin:{l:60, r:10, t:10, b:30},
+    xaxis:{
+      gridcolor:'#21262d', linecolor:'#30363d', tickcolor:'#30363d',
+      rangeslider:{visible:false}, type:'linear',
+    },
+    yaxis:{ gridcolor:'#21262d', linecolor:'#30363d', tickcolor:'#30363d' },
+    showlegend:false, hovermode='x unified',
+  };
+
+  // ── K線圖 ──────────────────────────────────────────────
+  const klineTraces = [
+    {
+      x:d.dates, open:d.open, high:d.high, low:d.low, close:d.close,
+      type:'candlestick', name:'K',
+      increasing:{line:{color:'#ef4444', width:1},  fillcolor:'rgba(239,68,68,0.5)'},
+      decreasing:{line:{color:'#22c55e', width:1}, fillcolor:'rgba(34,197,94,0.5)'},
+    },
+    { x:d.dates, y:d.ma5,  type:'scatter', mode:'lines', name:'MA5',  line:{color:'#FFA726', width:1.5}, hoverinfo:'y+name' },
+    { x:d.dates, y:d.ma10, type:'scatter', mode:'lines', name:'MA10', line:{color:'#AB47BC', width:1.5}, hoverinfo:'y+name' },
+    { x:d.dates, y:d.ma20, type:'scatter', mode:'lines', name:'MA20', line:{color:'#42A5F5', width:2},   hoverinfo:'y+name' },
+    { x:d.dates, y:d.ma60, type:'scatter', mode:'lines', name:'MA60', line:{color:'#B2DFDB', width:1.5}, hoverinfo:'y+name' },
+    { x:d.dates, y:d.bb_u, type:'scatter', mode:'lines', name:'BB Up',   line:{color:'rgba(66,165,245,0.4)', width:0.8, dash:'dot'}, showlegend:false, hoverinfo:'skip' },
+    { x:d.dates, y:d.bb_l, type:'scatter', mode:'lines', name:'BB Lo',   line:{color:'rgba(66,165,245,0.4)', width:0.8, dash:'dot'}, showlegend:false, hoverinfo:'skip' },
+    {
+      x:d.dates.concat(d.dates.slice().reverse()), y:d.bb_u.concat(d.bb_l.slice().reverse()),
+      type:'scatter', fill='toself', fillcolor='rgba(66,165,245,0.06)',
+      line:{color:'transparent'}, name:'BB', showlegend:false, hoverinfo:'skip',
+    },
+  ];
+  Plotly.newPlot('klineChart', klineTraces, {
+    ...layoutShared,
+    yaxis:{ ...layoutShared.yaxis, title:'Price (TWD)' },
+    height:480,
+  }, {responsive:true, displayModeBar:true, modeBarButtons:[['zoomIn','zoomOut','resetScale']]});
+
+  // ── 成交量 ──────────────────────────────────────────────
+  const volColors = d.close.map((c,i)=> c>=d.open[i] ? '#ef4444' : '#22c55e');
+  const volTrace = [{
+    x:d.dates, y:d.volume, type:'bar', name:'Vol',
+    marker:{color:volColors, opacity:0.75},
+    hovertemplate:'Vol: %{y:.0f}<extra></extra>',
+  }];
+  Plotly.newPlot('volChart', volTrace, {
+    ...layoutShared, height:140,
+    yaxis:{ ...layoutShared.yaxis, title:'Volume' },
+  }, {responsive:true, displayModeBar:false});
+
+  // ── RSI + KD ────────────────────────────────────────────
+  const rsiTraces = [];
+  if (rsiVis && d.rsi.length > 0) {
+    rsiTraces.push({
+      x:d.dates, y:d.rsi, type:'scatter', mode:'lines', name:'RSI(14)',
+      line:{color:'#E040FB', width:1.5},
+      hovertemplate:'RSI: %{y:.1f}<extra></extra>',
+    });
+    if (kdVis && d.k.length > 0) {
+      rsiTraces.push({
+        x:d.dates, y:d.k, type:'scatter', mode:'lines', name:'K(9)',
+        line:{color:'#FF7043', width:1.2}, hovertemplate='K: %{y:.1f}<extra></extra>',
+      });
+      rsiTraces.push({
+        x:d.dates, y:d.d, type:'scatter', mode:'lines', name:'D(9)',
+        line:{color:'#26C6DA', width:1.2}, hovertemplate='D: %{y:.1f}<extra></extra>',
+      });
+    }
+    rsiTraces.push({
+      x:d.dates, y:Array(d.dates.length).fill(70),
+      type:'scatter', mode:'lines', name:'OB',
+      line:{color:'rgba(239,68,68,0.35)', width:0.8, dash:'dash'}, hoverinfo:'skip',
+    });
+    rsiTraces.push({
+      x:d.dates, y:Array(d.dates.length).fill(30),
+      type:'scatter', mode:'lines', name:'OS',
+      line:{color:'rgba(34,197,94,0.35)', width:0.8, dash:'dash'}, hoverinfo:'skip',
+    });
+  }
+  Plotly.newPlot('rsiChart', rsiTraces.length ? rsiTraces : [{x:[],y:[]}], {
+    ...layoutShared, height:160,
+    yaxis:{ ...layoutShared.yaxis, title:'RSI / KD', range:[0,100] },
+  }, {responsive:true, displayModeBar:false});
+
+  // ── MACD ────────────────────────────────────────────────
+  const macdTraces = [];
+  if (macdVis && d.macd.some(x=>x!==null)) {
+    macdTraces.push({
+      x:d.dates, y:d.hist, type:'bar', name:'Hist',
+      marker:{color:d.hist.map(h=>h>=0?'#ef4444':'#22c55e')},
+      hovertemplate:'Hist: %{y:.3f}<extra></extra>',
+    });
+    macdTraces.push({
+      x:d.dates, y:d.macd_line, type:'scatter', mode:'lines', name:'MACD',
+      line:{color:'#29B6F6', width:1.5}, hovertemplate='MACD: %{y:.3f}<extra></extra>',
+    });
+    macdTraces.push({
+      x:d.dates, y:d.signal_line, type:'scatter', mode:'lines', name='Signal',
+      line:{color:'#FFA726', width:1.2}, hovertemplate='Sig: %{y:.3f}<extra></extra>',
+    });
+  }
+  Plotly.newPlot('macdChart', macdTraces.length ? macdTraces : [{x:[],y:[]}], {
+    ...layoutShared, height:160,
+    yaxis:{ ...layoutShared.yaxis, title:'MACD' },
+  }, {responsive:true, displayModeBar:false});
+}
+
+// Initial render
+const initStock = document.getElementById('stockSel').value;
+const initDays  = parseInt(document.getElementById('daysSel').value);
+if (allData[initStock] && allData[initStock][initDays]) {
+  render(allData[initStock][initDays]);
+} else {
+  // render placeholder
+  ['klineChart','volChart','rsiChart','macdChart'].forEach(id => {
+    Plotly.newPlot(id, [{x:[],y:[]}], {paper_bgcolor:'#0d1117', font:{color:'#8b949e'}, margin:{l:0,r:0,t:0,b:0}}, {displayModeBar:false});
+  });
+}
+</script>
+</body>
+</html>
